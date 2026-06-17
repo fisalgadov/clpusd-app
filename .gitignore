@@ -2,3 +2,30 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Phase 1 security controls (minimal)
+# Note: .gitignore prevents new tracking; it does not untrack files already tracked by Git.
+# Tracked production model artifacts remain tracked and protected.
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Local generated paths
+cache/
+cache_*/
+outputs/
+artifacts/
+reports/
+forecasts/
+data_internal/
+bloomberg_exports/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+
+# Generated notebook artifacts
+_runcheck*.ipynb
+_tmp*.ipynb
+*_executed.ipynb

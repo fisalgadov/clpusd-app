@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+
+  - repo: local
+    hooks:
+      - id: block-generated-notebooks
+        name: Block generated notebook artifacts
+        language: system
+        files: \.ipynb$
+        entry: >-
+          python -c "import re,sys; bad=[p for p in sys.argv[1:] if re.search(r'(^|/)(_runcheck.*|_tmp.*|.*_executed)\.ipynb$', p)];
+          print('Blocked generated notebooks:') or [print(' - '+p) for p in bad] if bad else None; sys.exit(1 if bad else 0)"
+
+      - id: block-risky-added-artifacts
+        name: Block risky newly added data artifacts
+        language: system
+        pass_filenames: false
+        entry: >-
+          python -c "import re,subprocess,sys;
+          allow=(r'^data_sample/', r'^tests/fixtures/', r'.*\.example\.csv$');
+          risky=r'(?i)\.(pkl|pickle|joblib|db|sqlite|sqlite3|parquet|feather|h5|hdf5|xls|xlsx|xlsm|xlsb)$';
+          out=subprocess.run(['git','diff','--cached','--name-status'],capture_output=True,text=True,check=False).stdout.splitlines();
+          added=[ln.split('\t',1)[1] for ln in out if ln.startswith('A\t') and '\t' in ln];
+          bad=[p for p in added if re.search(risky,p) and not any(re.search(a,p) for a in allow)];
+          print('Blocked risky added artifacts:') or [print(' - '+p) for p in bad] if bad else None; sys.exit(1 if bad else 0)"
